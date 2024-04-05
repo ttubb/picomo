@@ -55,9 +55,8 @@ process P_FEATURECOUNTS {
             -o \${prefix}_featureCounts.tsv \
             ${bam}
 
-        # Use sed to change the header. The count column in the original 
-        # header will have the name of the .bam file. We want to change it
-        # to a string that contains the type, condition and sample name.
-        sed -i '1s/${bam.getFileName()}/${type}_${condition}_${sample}/' \${prefix}_featureCounts.tsv
+        # Sed is used to make column names correspond to sample names
+        # instead of whole filenames
+        sed -i '2s/${bam.getFileName()}/${sample}/' \${prefix}_featureCounts.tsv
         """
 }

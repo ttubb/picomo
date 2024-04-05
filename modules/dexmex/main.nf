@@ -31,6 +31,7 @@ process P_DEXMEX_CONVERTFC {
 
     input:
         path    featureCountsFiles
+        path    coldata
 
     output:
         path    "combined_counts.tsv"
@@ -41,7 +42,8 @@ process P_DEXMEX_CONVERTFC {
         outpath=combined_counts.tsv
         dexmex convertfc \
             -f ${featureCountsFilesArg} \
-            -o \${outpath}
+            -o \${outpath} \
+            -c ${coldata}
         """
 }
 
@@ -59,7 +61,7 @@ process P_DEXMEX_FEATURETOMAG_GFF {
         path    "feature_to_mag.tsv"
 
     script:
-        def skipBinsArg = skipBins ? "--skip ${skipBins.join(' ')}" : ''
+        def skipBinsArg = skipBins.join(' ')
         def geneIdArg = geneId ? "--gene_id ${geneId}" : ''
         """
         outpath=feature_to_mag.tsv
@@ -67,7 +69,7 @@ process P_DEXMEX_FEATURETOMAG_GFF {
             --output \${outpath} \
             --bins_directory ${binsDirectory} \
             --gff ${gff} \
-            ${skipBinsArg} \
+            --skip ${skipBinsArg} \
             ${geneIdArg}
         """
 }
@@ -80,10 +82,36 @@ process P_COLDATA_FROM_SAMPLESHEET {
         path   samplesheet
 
     output:
-        path    "coldata.tsv"
+        path    "rna_coldata.tsv",
+                emit: rna_coldata
+        path    "dna_coldata.tsv",
+                emit: dna_coldata
 
     script:
         """
-        awk -F '\\t' 'BEGIN {print "sample\\tcondition"} \$1 == "rna" {print \$3"\\t"\$2}' ${samplesheet} > coldata.tsv
+        #!/usr/bin/env python
+
+        import csv
+
+        header = ['sample', 'condition', 'replicate']
+        dna_samples_seen = set()
+        rna_samples_seen = set()
+        with open('${samplesheet}', 'r') as infile:
+            with open('rna_coldata.tsv', 'w', newline='') as rna_outfile:
+                with open('dna_coldata.tsv', 'w', newline='') as dna_outfile:
+                    reader = csv.DictReader(infile, delimiter='\\t')
+                    rna_writer = csv.writer(rna_outfile, delimiter='\\t')
+                    dna_writer = csv.writer(dna_outfile, delimiter='\\t')
+                    rna_writer.writerow(header)
+                    dna_writer.writerow(header)
+                    for row in reader:
+                        if row['TYPE'] == 'rna' and row['SAMPLE'] not in rna_samples_seen:
+                            rna_writer.writerow([row['SAMPLE'], row['CONDITION']])
+                            rna_samples_seen.add(row['SAMPLE'])
+                        elif row['TYPE'] == 'dna' and row['SAMPLE'] not in dna_samples_seen:
+                            dna_writer.writerow([row['SAMPLE'], row['CONDITION']])
+                            dna_samples_seen.add(row['SAMPLE'])
+                        elif row['TYPE'] not in ['rna', 'dna']:
+                            raise ValueError("Invalid sample type:", row['TYPE'])
         """
 }
