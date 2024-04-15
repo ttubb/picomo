@@ -4,7 +4,7 @@
   <img align="left" alt="Synum Logo" sr c="img/logo_light.png" width="160">
 </picture>
 
-**Picomo** is a nextflow pipeline for comparative Metagenomics and -transcriptomics analyses. It is aimed at experimental setups like time series or multi-condition experiments. The workflow can carry out read quality control (fastp), assembly (megahit) and mapping (bowtie2). The pipeline bins contigs (metabat2) and uses prodigal to predict genes on those contigs. Reads are counted using subread featureCounts and [dexmex](https://github.com/dexmex) is employed for taxon-level differential expression analysis. Using CheckM, relative abundances of MAG bins is calculated. Processes run in containers.
+**Picomo** is a nextflow pipeline for comparative Metagenomics and -transcriptomics analyses. It is aimed at experimental setups like time series or multi-condition experiments. The workflow can carry out read quality control (fastp), assembly (megahit) and mapping (bowtie2). The pipeline bins contigs (metabat2) and uses prodigal to predict genes on those contigs. Reads are counted using subread featureCounts and [dexmex](https://github.com/ttubb/dexmex) is employed for taxon-level differential expression analysis. Using CheckM, relative abundances of MAG bins is calculated. Processes run in containers.
  As input, users need to provide `.fastq` files and samplesheet detailing which condition and replicate each file belongs to.
 
 # Samplesheet
